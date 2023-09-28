@@ -55,9 +55,19 @@ class App {
      */
     toUpdate = false;
 
+    /**
+     * @type HTMLButtonElement
+     */
+    btnAdd;
+
+    /**
+     * @type HTMLInputElement
+     */
+    refit
+
     constructor() {
 
-        this.initMD();
+        this.init();
         this.pageId = document.querySelector("#pageId").value;
         let md = this.md.value;
 
@@ -83,7 +93,10 @@ class App {
         this.md.addEventListener("keyup", (e) => {
             this.updateMarkmap();
             this.toUpdate = true;
-            console.log(this.toUpdate)
+        });
+
+        this.btnAdd.addEventListener('click', async (e) => {
+            await this.addPage();
         });
 
         this.checkUpdate();
@@ -93,10 +106,12 @@ class App {
     /**
      * init des champs nécessaires à markMap
      */
-    initMD() {
+    init() {
         this.transformer = new Transformer();
         this.md = document.querySelector("#editor");
         this.inputTitle = document.querySelector('#page-title');
+        this.btnAdd = document.querySelector('#btn-add-page');
+        this.refit = document.querySelector('#refit');
     }
 
     /**
@@ -109,11 +124,10 @@ class App {
         const { styles, scripts } = this.transformer.getUsedAssets(features);
 
         if (styles) loadCSS(styles);
-        if (scripts) loadJS(scripts, { getMarkmap: () => markmap });
+        if (scripts) loadJS(scripts, { getMarkmap: () => this.mm });
 
         this.mm.setData(root);
-        // this.mm.fit();
-
+        if (this.refit.checked) this.mm.fit();
     }
 
     /**
@@ -122,7 +136,6 @@ class App {
      */
     async updateData()
     {
-        console.log(this.md.value)
         const data = {
             title: this.inputTitle.value,
             content: this.md.value
@@ -144,6 +157,21 @@ class App {
                 this.checkUpdate();
             }
         }, this.updateDelay)
+    }
+
+    async addPage() {
+        const pageId = (await api.post('maps')).result;
+
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+
+        a.classList.add("link-dark", "d-inline-flex", "rounded", "text-decoration-none", "anchor-page");
+        a.dataset.id = pageId;
+        a.href = `/${pageId}`;
+        a.innerText = 'Sans titre';
+
+        li.appendChild(a);
+        document.querySelector('.pages-list').appendChild(li);
     }
 
 }

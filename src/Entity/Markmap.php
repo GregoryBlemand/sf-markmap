@@ -27,6 +27,7 @@ class Markmap
         $this->id = bin2hex(random_bytes(16));
         $this->createdAt = new \DateTimeImmutable();
         $this->title = 'Sans titre';
+        $this->content = '# sujet de départ';
     }
 
     public function getId(): ?string

@@ -18,12 +18,13 @@ class MarkmapController extends AbstractController
     #[Route('/{id?}', name: 'home', methods: ['GET'])]
     public function index(?Markmap $markmap, EntityManagerInterface $em, MarkmapRepository $mr): Response
     {
+        $maps = $mr->findAll();
+
         if (!$markmap)
         {
-            $maps = $mr->findAll();
             if (!empty($maps))
             {
-                $markmap = array_shift($maps);
+                $markmap = $maps[0];
             }
             else
             {
@@ -37,6 +38,7 @@ class MarkmapController extends AbstractController
 
         return $this->render('markmap/index.html.twig', [
             'currentMap' => $markmap,
+            'pages' => $maps
         ]);
     }
 
