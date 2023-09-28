@@ -69,6 +69,20 @@ class App {
 
         this.init();
 
+        var isCtrl = false;
+        document.onkeyup=function(e){
+            if(e.code == 'Control') isCtrl=false;
+        }
+
+        document.onkeydown=function(e){
+
+            if(e.code == 'Control') isCtrl=true;
+            if(e.code == 'KeyS' && isCtrl == true) {
+                this.updateData();
+                return false;
+            }
+        }
+
         this.anchorPages.forEach(anchorPage => {
             anchorPage.addEventListener('contextmenu', (e) => {
                 e.preventDefault();
@@ -139,6 +153,7 @@ class App {
 
         const svgEl = document.querySelector('#svg');
         this.mm = Markmap.create(svgEl, undefined, root);
+
     }
 
     /**
