@@ -68,17 +68,26 @@ class App {
     constructor() {
 
         this.init();
-        this.pageId = document.querySelector("#pageId").value;
-        let md = this.md.value;
 
-        const { root, features } = this.transformer.transform(md);
-        const { styles, scripts } = this.transformer.getUsedAssets(features);
+        this.anchorPages.forEach(anchorPage => {
+            anchorPage.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.showContextMenu(e);
+            });
 
-        if (styles) loadCSS(styles);
-        if (scripts) loadJS(scripts, { getMarkmap: () => markmap });
+            if (anchorPage.classList.contains('active') && anchorPage.dataset.id !== this.pageId)
+            {
+                window.location.href = `/pages/${anchorPage.dataset.id}`;
+            }
+        });
 
-        const svgEl = document.querySelector('#svg');
-        this.mm = Markmap.create(svgEl, undefined, root);
+        document.querySelector('.btn-delete-page').addEventListener('click', async () => {
+            await this.deletePage();
+        });
+
+        document.querySelector('body').addEventListener('click', () => {
+            this.contextmenu.classList.remove('visible');
+        }, true);
 
         window.addEventListener("beforeunload", async () => {
             this.updateData();
@@ -86,6 +95,7 @@ class App {
 
         this.inputTitle.addEventListener("keyup", (e) => {
             const value = e.target.value.length === 0 ? 'Sans titre' : e.target.value;
+            this.currentAnchorPage.innerText = value;
             document.title = value
             this.updateData();
         });
@@ -112,6 +122,23 @@ class App {
         this.inputTitle = document.querySelector('#page-title');
         this.btnAdd = document.querySelector('#btn-add-page');
         this.refit = document.querySelector('#refit');
+        this.contextmenu = document.querySelector('.context-menu');
+
+        this.pageId = document.querySelector("#pageId").value;
+
+        this.anchorPages = Array.from(document.querySelectorAll('.anchor-page'));
+        this.currentAnchorPage = this.anchorPages.find(anchorPage => anchorPage.dataset.id == this.pageId);
+
+        let md = this.md.value;
+
+        const { root, features } = this.transformer.transform(md);
+        const { styles, scripts } = this.transformer.getUsedAssets(features);
+
+        if (styles) loadCSS(styles);
+        if (scripts) loadJS(scripts, { getMarkmap: () => markmap });
+
+        const svgEl = document.querySelector('#svg');
+        this.mm = Markmap.create(svgEl, undefined, root);
     }
 
     /**
@@ -172,6 +199,30 @@ class App {
 
         li.appendChild(a);
         document.querySelector('.pages-list').appendChild(li);
+    }
+
+    async deletePage() {
+        const pageId = this.clickedAnchorPage.dataset.id;
+
+        await api.delete(`/maps/${pageId}`);
+
+        if (pageId === this.pageId)
+        {
+            document.location.reload();
+        }
+
+        this.clickedAnchorPage.remove();
+    }
+
+    /**
+     *
+     * @param {MouseEvent} e
+     */
+    showContextMenu (e) {
+        this.contextmenu.style.top = `${e.clientY}px`;
+        this.contextmenu.style.left = `${e.clientX}px`;
+        this.contextmenu.classList.add('visible');
+        this.clickedAnchorPage = e.target;
     }
 
 }
