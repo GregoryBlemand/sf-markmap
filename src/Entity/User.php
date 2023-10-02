@@ -3,11 +3,15 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
+#[UniqueEntity(fields: ['email'], message: 'There is already an account with this email')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -26,6 +30,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    #[ORM\OneToMany(mappedBy: 'user', targetEntity: Markmap::class, orphanRemoval: true)]
+    private Collection $markmaps;
+
+    public function __construct()
+    {
+        $this->markmaps = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -95,5 +107,35 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    /**
+     * @return Collection<int, Markmap>
+     */
+    public function getMarkmaps(): Collection
+    {
+        return $this->markmaps;
+    }
+
+    public function addMarkmap(Markmap $markmap): static
+    {
+        if (!$this->markmaps->contains($markmap)) {
+            $this->markmaps->add($markmap);
+            $markmap->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMarkmap(Markmap $markmap): static
+    {
+        if ($this->markmaps->removeElement($markmap)) {
+            // set the owning side to null (unless already changed)
+            if ($markmap->getUser() === $this) {
+                $markmap->setUser(null);
+            }
+        }
+
+        return $this;
     }
 }
