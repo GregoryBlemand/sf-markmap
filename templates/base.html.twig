@@ -14,6 +14,7 @@
     </head>
     <body>
         <main class="d-flex flex-nowrap">
+            {% if is_granted('IS_AUTHENTICATED_FULLY') %}
             <div class="flex-shrink-0 p-3 bg-light" style="height: 100vh; width: 280px;">
                 <a href="/" class="d-flex align-items-center pb-3 mb-3 link-dark text-decoration-none border-bottom">
                     <svg class="bi pe-none me-2" width="30" height="24"><use xlink:href="#bootstrap"></use></svg>
@@ -26,7 +27,6 @@
                         </button>
                         <div class="collapse show" id="home-collapse">
                             <ul class="btn-toggle-nav list-unstyled fw-normal pb-1 small pages-list">
-                                {% dump(pages) %}
                                 {% for page in pages %}
                                     <li>
                                         <a href="{{ path('markmap_home', {'id' : page.id}) }}"
@@ -53,6 +53,7 @@
                     </li>
                 </ul>
             </div>
+            {% endif %}
 
             {% block body %}{% endblock %}
 
