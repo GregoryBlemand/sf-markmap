@@ -7,6 +7,7 @@ use App\Repository\MarkmapRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use phpDocumentor\Reflection\Types\This;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,9 +16,21 @@ use Symfony\Component\Routing\Annotation\Route;
 #[Route('/', name: "markmap_")]
 class MarkmapController extends AbstractController
 {
+    public function __construct(
+        private readonly Security $security
+    )
+    {
+    }
+
     #[Route('/{id?}', name: 'home', methods: ['GET'])]
     public function index(?Markmap $markmap, EntityManagerInterface $em, MarkmapRepository $mr): Response
     {
+        $user = $this->security->getUser();
+
+        if (!$user) {
+            return $this->redirectToRoute('users_login');
+        }
+        // TODO récupérer les maps du user
         $maps = $mr->findAll();
 
         if (!$markmap)
@@ -29,6 +42,8 @@ class MarkmapController extends AbstractController
             else
             {
                 $markmap = new Markmap();
+                $markmap->setUser($user);
+
                 $em->persist($markmap);
                 $em->flush();
             }
@@ -46,6 +61,9 @@ class MarkmapController extends AbstractController
     public function add(EntityManagerInterface $em) : JsonResponse
     {
         $markmap = new Markmap();
+        $user = $this->security->getUser();
+        $markmap->setUser($user);
+
         $em->persist($markmap);
         $em->flush();
 
