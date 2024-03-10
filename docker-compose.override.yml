@@ -2,10 +2,35 @@ version: '3'
 
 services:
 ###> doctrine/doctrine-bundle ###
-  database:
-    ports:
-      - "5432"
+#  database:
+#    ports:
+#      - "5432"
 ###< doctrine/doctrine-bundle ###
+
+  database:
+    image: mariadb:${MARIADB_VERSION:-10.8.8}
+    command: "--default-authentication-plugin=mysql_native_password"
+    container_name: markmap_mysql
+#    volumes:
+#      - ./data/db:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: markmap
+      MYSQL_USER: client
+      MYSQL_PASSWORD: client
+    ports:
+      - 3306:3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: markmap_phpmyadmin
+    environment:
+      PMA_HOST: database
+      PMA_PORT: 3306
+    ports:
+      - 8080:80
+    links:
+      - database
 
 ###> symfony/mailer ###
   mailer:
